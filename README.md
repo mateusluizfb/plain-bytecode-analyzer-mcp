@@ -1,6 +1,6 @@
-# Bytecode Analyzer MCP
+# Plain Bytecode Analyzer MCP
 
-This MCP (Model Context Protocol) server analyzes JVM `.class` bytecode to provide insights on performance and optimizations. It retrieves the bytecode of a specified class and suggests potential improvements while ensuring code legibility and efficiency.
+This MCP (Model Context Protocol) server analyzes JVM `.class` bytecode to provide insights on performance and optimizations. It retrieves the bytecode as text of a specified class and suggests potential improvements while ensuring code legibility and efficiency.
 
 ## How to install
 
@@ -28,4 +28,4 @@ This MCP (Model Context Protocol) server analyzes JVM `.class` bytecode to provi
 
 - Add it to a MCP Registry
 - Test with different JVM projects of different languages (Java, Kotlin, Scala, etc).
-- Add more detailed information reggarding the bytecode. For example, we can use static analysis techniques to gatter the Control Flow Graph (CFG) and Data Flow Analysis (DFA) of the bytecode. But this required specific tooling.
+- Add more detailed information reggarding the bytecode. For example, we can use static analysis techniques to gatter the Control Flow Graph (CFG) and Data Flow Analysis (DFA) of the bytecode. But this requires specific tooling, and maybe it should be done in a Java environment in a separate MCP server.
