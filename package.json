@@ -1,0 +1,19 @@
+{
+  "name": "byteccode-analyzer-mcp",
+  "version": "0.1.0",
+  "description": "",
+  "license": "MIT",
+  "author": "Mateus Luiz Freitas Barros <mateuslfreitasb@gmail.com>",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "inspector": "npx @modelcontextprotocol/inspector node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "zod": "^3.21.4"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.17.2"
+  }
+}
