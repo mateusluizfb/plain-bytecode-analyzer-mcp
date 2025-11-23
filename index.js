@@ -19,20 +19,25 @@ indirection/reflection that might confuse JVM or the compiler optimizations.
 - If there isn't any apparent improvement, don't suggest anything.
 `
 
+// TODO: Extract the language programmatically. So we don't add another languages' info unecessarily.
+const bytecodeGenerationPromptByLanguage = `
+  clojure:
+    - Always check and create ./classes in the current working directory if it doesn't exist.
+    - run clojure -M:dev -e "(compile 'my.file.namespace)"
+`
+
 server.registerTool(
   'analyzeBytecode',
   {
-    title: 'Run Bytecode Analysis',
-    description: 'Analyze JVM .class bytecode for better insights on perfomance and optimizations.',
+    title: 'Run Bytecode Analysis for JVM',
+    description: "Analyze JVM .class bytecode of JVM compiled languages for better insights on perfomance and optimizations.",
     inputSchema: {
-      className: z.string().describe('The name of the class to analyze'),
-      cwd: z.string().optional().describe('The current working directory to search in'),
+      className: z.string().describe("The name of the class to analyze. It shouldn't include the full path or full namespace. For example: className 'my_class' for 'com.example.my-class'. The MCP looks for all bytecode files genereated like my_class*.class."),
+      cwd: z.string().optional().describe('The current root directory to search in. Never the class path, always the root directory of the project.'),
     },
   },
   async (input) => {
     const { className, cwd } = input;
-
-    console.log(`Analyzing bytecode for class: ${className} in directory: ${cwd}`);
 
     const underscoreClassName = className.replace(/-/g, '_'); 
 
@@ -45,6 +50,7 @@ server.registerTool(
       return {
         content: [
           { type: 'text', text: "Could not retrieve bytecode. Ensure the class name is correct or class files are defined in the current working directory." },
+          { type: 'text', text: `Run the current's language compiler to generate the bytecode. Follow this instructions for the given language:\n${bytecodeGenerationPromptByLanguage}` },
         ],
       }
     }
