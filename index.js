@@ -22,8 +22,8 @@ indirection/reflection that might confuse JVM or the compiler optimizations.
 // TODO: Extract the language programmatically. So we don't add another languages' info unecessarily.
 const bytecodeGenerationPromptByLanguage = `
   clojure:
-    - Always check and create ./classes in the current working directory if it doesn't exist.
-    - run clojure -M:dev -e "(compile 'my.file.namespace)"
+    1. Always check and create ./classes in the current working directory if it doesn't exist.
+    2. Run clojure -M:dev -e "(compile 'my.file.namespace)"
 `
 
 server.registerTool(
@@ -50,7 +50,7 @@ server.registerTool(
       return {
         content: [
           { type: 'text', text: "Could not retrieve bytecode. Ensure the class name is correct or class files are defined in the current working directory." },
-          { type: 'text', text: `Run the current's language compiler to generate the bytecode. Follow this instructions for the given language:\n${bytecodeGenerationPromptByLanguage}` },
+          { type: 'text', text: `Run the current's language compiler to generate the bytecode. Always follow these instructions for the given language:\n${bytecodeGenerationPromptByLanguage}` },
         ],
       }
     }
