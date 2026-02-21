@@ -19,12 +19,50 @@ indirection/reflection that might confuse JVM or the compiler optimizations.
 - If there isn't any apparent improvement, don't suggest anything.
 `
 
-// TODO: Extract the language programmatically. So we don't add another languages' info unecessarily.
-const bytecodeGenerationPromptByLanguage = `
-  clojure:
-    1. Always check and create ./classes in the current working directory if it doesn't exist.
-    2. Run clojure -M:dev -e "(compile 'my.file.namespace)"
-`
+// Strategy pattern for language-specific bytecode generation instructions
+const bytecodeGenerationStrategies = {
+  clojure: {
+    instructions: [
+      'Always check and create ./classes in the current working directory if it doesn\'t exist.',
+      'Run: clojure -M:dev -e "(compile \'my.file.namespace)"',
+    ],
+  },
+  java: {
+    instructions: [
+      'Compile Java source files with: javac -d ./classes src/path/to/YourClass.java',
+      'Ensure the output directory exists before compilation.',
+    ],
+  },
+  kotlin: {
+    instructions: [
+      'Compile Kotlin source files with: kotlinc -d ./classes src/path/to/YourClass.kt',
+      'For projects using Gradle/Maven, run the build task to generate .class files.',
+    ],
+  },
+  scala: {
+    instructions: [
+      'Compile Scala source files with: scalac -d ./classes src/path/to/YourClass.scala',
+      'For SBT projects, run: sbt compile',
+    ],
+  },
+  groovy: {
+    instructions: [
+      'Compile Groovy source files with: groovyc -d ./classes src/path/to/YourClass.groovy',
+      'Ensure GROOVY_HOME is set in your environment.',
+    ],
+  },
+};
+
+function getBytecodeGenerationInstructions(language) {
+  const strategy = bytecodeGenerationStrategies[language?.toLowerCase()];
+  if (strategy) {
+    return `Instructions for ${language}:\n${strategy.instructions.map((inst, idx) => `  ${idx + 1}. ${inst}`).join('\n')}`;
+  }
+  
+  // Default instructions for unknown languages
+  const allLanguages = Object.keys(bytecodeGenerationStrategies).join(', ');
+  return `Supported languages: ${allLanguages}\n\nGeneral instructions:\n  1. Compile your source files to generate .class files\n  2. Ensure the .class files are in a searchable directory\n  3. Specify the correct className and cwd parameters`;
+}
 
 server.registerTool(
   'analyzeBytecode',
@@ -34,10 +72,11 @@ server.registerTool(
     inputSchema: {
       className: z.string().describe("The name of the class to analyze. It shouldn't include the full path or full namespace. For example: className 'my_class' for 'com.example.my-class'. The MCP looks for all bytecode files genereated like my_class*.class."),
       cwd: z.string().optional().describe('The current root directory to search in. Never the class path, always the root directory of the project.'),
+      language: z.enum(['clojure', 'java', 'kotlin', 'scala', 'groovy']).optional().describe('The JVM language used (clojure, java, kotlin, scala, groovy). Used to provide language-specific compilation instructions if bytecode files are not found.'),
     },
   },
   async (input) => {
-    const { className, cwd } = input;
+    const { className, cwd, language } = input;
 
     // Validate className to prevent command injection
     if (!className || typeof className !== 'string') {
@@ -77,6 +116,18 @@ server.registerTool(
       }
     }
 
+    // Validate language parameter if provided
+    if (language !== undefined) {
+      const validLanguages = ['clojure', 'java', 'kotlin', 'scala', 'groovy'];
+      if (!validLanguages.includes(language.toLowerCase())) {
+        return {
+          content: [
+            { type: 'text', text: `Error: Invalid language '${language}'. Supported languages: ${validLanguages.join(', ')}.` },
+          ],
+        };
+      }
+    }
+
     const underscoreClassName = className.replace(/-/g, '_'); 
 
     const searchPath = cwd || '.';
@@ -89,7 +140,7 @@ server.registerTool(
       return {
         content: [
           { type: 'text', text: "Could not retrieve bytecode. Ensure the class name is correct or class files are defined in the current working directory." },
-          { type: 'text', text: `Run the current's language compiler to generate the bytecode. Always follow these instructions for the given language:\n${bytecodeGenerationPromptByLanguage}` },
+          { type: 'text', text: `Run the current language's compiler to generate the bytecode.\n\n${getBytecodeGenerationInstructions(language)}` },
         ],
       }
     }
