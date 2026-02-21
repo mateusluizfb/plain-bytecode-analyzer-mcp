@@ -39,10 +39,49 @@ server.registerTool(
   async (input) => {
     const { className, cwd } = input;
 
+    // Validate className to prevent command injection
+    if (!className || typeof className !== 'string') {
+      return {
+        content: [
+          { type: 'text', text: "Error: className is required and must be a string." },
+        ],
+      };
+    }
+
+    // Only allow alphanumeric characters, hyphens, underscores, and dots
+    if (!/^[a-zA-Z0-9_\-\.]+$/.test(className)) {
+      return {
+        content: [
+          { type: 'text', text: "Error: className contains invalid characters. Only alphanumeric characters, hyphens, underscores, and dots are allowed." },
+        ],
+      };
+    }
+
+    // Validate cwd to prevent command injection
+    if (cwd !== undefined) {
+      if (typeof cwd !== 'string') {
+        return {
+          content: [
+            { type: 'text', text: "Error: cwd must be a string." },
+          ],
+        };
+      }
+
+      // Check for shell metacharacters that could be used for injection
+      if (/[;&|`$()<>\\"]/.test(cwd)) {
+        return {
+          content: [
+            { type: 'text', text: "Error: cwd contains invalid characters." },
+          ],
+        };
+      }
+    }
+
     const underscoreClassName = className.replace(/-/g, '_'); 
 
+    const searchPath = cwd || '.';
     const rawBytecode = execSync(
-      `find ${cwd} -type f -name '${underscoreClassName}*.class' | sort -r | xargs -n1 -I{} javap -c {}`,
+      `find ${searchPath} -type f -name '${underscoreClassName}*.class' | sort -r | xargs -n1 -I{} javap -c {}`,
       'utf-8'
     ).toString();
 
